@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io"
 	"os"
+	"reflect"
 	"sort"
 )
 
@@ -25,7 +26,7 @@ func main() {
 	}
 
 	var (
-		in io.Reader = os.Stdin
+		in  io.Reader = os.Stdin
 		out io.Writer = os.Stdout
 	)
 
@@ -53,18 +54,29 @@ func main() {
 		out = f
 	}
 
-	var document yaml.MapSlice
+	var recursiveSort func(interface{})
+	recursiveSort = func(doc interface{}) {
+		document, isDocument := doc.(yaml.MapSlice)
 
-	if err := yaml.NewDecoder(in).Decode(&document); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+		if array := reflect.ValueOf(doc); !isDocument && array.Kind() == reflect.Slice {
+			length := array.Len()
 
-	var recursiveSort func(document yaml.MapSlice)
-	recursiveSort = func(document yaml.MapSlice) {
+			for i := 0; i < length; i++ {
+				elem := array.Index(i).Interface()
+				recursiveSort(elem)
+				array.Index(i).Set(reflect.ValueOf(elem))
+			}
+
+			return
+		}
+
+		if !isDocument {
+			return
+		}
+
 		sort.Sort(sorter{
-			len: len(document),
-			swap: func(i, j int) {document[i], document[j] = document[j], document[i]},
+			len:  len(document),
+			swap: func(i, j int) { document[i], document[j] = document[j], document[i] },
 
 			less: func(i, j int) bool {
 				iKey, iIsString := document[i].Key.(string)
@@ -77,14 +89,19 @@ func main() {
 		})
 
 		for i := range document {
-			fmt.Printf("%T\n", document[i])
-			d, ok := document[i].Value.(yaml.MapSlice)
-			if !ok {
+			_, isMap := document[i].Value.(yaml.MapSlice)
+			if !isMap && reflect.ValueOf(document[i].Value).Kind() != reflect.Slice {
 				continue
 			}
-			recursiveSort(d)
-			document[i].Value = d
+			recursiveSort(document[i].Value)
 		}
+	}
+
+	var document yaml.MapSlice
+
+	if err := yaml.NewDecoder(in).Decode(&document); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	recursiveSort(document)
@@ -95,13 +112,12 @@ func main() {
 	}
 }
 
-type sorter struct{
-	len int
+type sorter struct {
+	len  int
 	less func(i, j int) bool
 	swap func(i, j int)
 }
 
-func (s sorter) Len() int { return s.len }
-func (s sorter) Swap(i, j int) { s.swap(i, j) }
+func (s sorter) Len() int           { return s.len }
+func (s sorter) Swap(i, j int)      { s.swap(i, j) }
 func (s sorter) Less(i, j int) bool { return s.less(i, j) }
-
