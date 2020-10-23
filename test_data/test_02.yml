@@ -1,0 +1,21 @@
+---
+b:
+  a: ""
+  c: ""
+  x: before q
+  w: after x
+  b: ""
+c:
+  a: ""
+  c: ""
+  x: move to end
+  b: ""
+x: move to end
+a:
+  c: ""
+  a: ""
+  b: ""
+  x: ignore
+w:
+ w: before x
+ x: after w
