@@ -1,0 +1,12 @@
+---
+c: 3
+dont_care_first: ""
+a: 1
+dont_care_second: ""
+embeded:
+  b: ""
+  a: ""
+slice:
+- b: ""
+  a: ""
+b: 2
