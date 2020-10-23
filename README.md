@@ -3,8 +3,10 @@
 ```
 Usage of yamlkeysort:
   -f string
-        input filename (default stdin)
+        read and write from the same file
   -h    help text
+  -i string
+        input filename (default stdin)
   -o string
         output filename (default stdout)
 

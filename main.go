@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"sort"
@@ -12,18 +14,25 @@ import (
 
 func main() {
 	var (
-		inputFileName, outputFileName string
-		showHelp                      bool
+		fileName, inputFileName, outputFileName string
+
+		showHelp bool
 	)
 
 	config := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	config.BoolVar(&showHelp, "h", false, "help text")
-	config.StringVar(&inputFileName, "f", "", "input filename (default stdin)")
-	config.StringVar(&inputFileName, "o", "", "output filename (default stdout)")
+	config.StringVar(&fileName, "f", "", "read and write from the same file")
+	config.StringVar(&inputFileName, "i", "", "input filename (default stdin)")
+	config.StringVar(&outputFileName, "o", "", "output filename (default stdout)")
 	config.ErrorHandling()
 	if err := config.Parse(os.Args[1:]); err != nil || showHelp {
 		fmt.Printf("\nExample:\n\n  %s -f input.yml -o output.yml first_key second_key third_key\n\n", os.Args[0])
 		os.Exit(1)
+	}
+
+	if fileName != "" {
+		inputFileName = fileName
+		outputFileName = fileName
 	}
 
 	keys := config.Args()
@@ -35,18 +44,22 @@ func main() {
 	var (
 		in  io.Reader = os.Stdin
 		out io.Writer = os.Stdout
+
+		prefix []byte
 	)
 
 	if inputFileName != "" {
-		f, err := os.Open(inputFileName)
+		inputBuf, err := ioutil.ReadFile(inputFileName)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		defer func() {
-			_ = f.Close()
-		}()
-		in = f
+
+		if bytes.HasPrefix(inputBuf, []byte("---\n")) {
+			prefix = []byte("---\n")
+		}
+
+		in = bytes.NewReader(inputBuf)
 	}
 
 	if outputFileName != "" {
@@ -113,6 +126,7 @@ func main() {
 
 	recursiveSort(document)
 
+	_, _ = out.Write(prefix)
 	if err := yaml.NewEncoder(out).Encode(document); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
