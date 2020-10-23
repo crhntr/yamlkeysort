@@ -13,13 +13,20 @@ import (
 func main() {
 	var (
 		inputFileName, outputFileName string
+		showHelp                      bool
 	)
 
-	flag.StringVar(&inputFileName, "f", "input filename", "")
-	flag.StringVar(&inputFileName, "o", "output filename", "")
-	flag.Parse()
+	config := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	config.BoolVar(&showHelp, "h", false, "help text")
+	config.StringVar(&inputFileName, "f", "", "input filename (default stdin)")
+	config.StringVar(&inputFileName, "o", "", "output filename (default stdout)")
+	config.ErrorHandling()
+	if err := config.Parse(os.Args[1:]); err != nil || showHelp {
+		fmt.Printf("\nExample:\n\n  %s -f input.yml -o output.yml first_key second_key third_key\n\n", os.Args[0])
+		os.Exit(1)
+	}
 
-	keys := flag.Args()
+	keys := config.Args()
 	keysMap := make(map[string]int, len(keys))
 	for i, k := range keys {
 		keysMap[k] = len(keys) - i
