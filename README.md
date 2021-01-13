@@ -12,7 +12,7 @@ Usage of yamlkeysort:
 
 Example:
 
-  yamlkeysort -f input.yml -o output.yml first_key second_key third_key
+  yamlkeysort -i input.yml -o output.yml first_key second_key third_key
 
 ```
 
