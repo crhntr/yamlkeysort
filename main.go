@@ -26,7 +26,7 @@ func main() {
 	config.StringVar(&outputFileName, "o", "", "output filename (default stdout)")
 	config.ErrorHandling()
 	if err := config.Parse(os.Args[1:]); err != nil || showHelp {
-		fmt.Printf("\nExample:\n\n  %s -f input.yml -o output.yml first_key second_key third_key\n\n", os.Args[0])
+		fmt.Printf("\nExample:\n\n  %s -i input.yml -o output.yml first_key second_key third_key\n\n", os.Args[0])
 		os.Exit(1)
 	}
 
