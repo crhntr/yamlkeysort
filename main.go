@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"sort"
+
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 	)
 
 	if inputFileName != "" {
-		inputBuf, err := ioutil.ReadFile(inputFileName)
+		inputBuf, err := os.ReadFile(inputFileName)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
